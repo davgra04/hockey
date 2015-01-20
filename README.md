@@ -5,4 +5,5 @@ This codebase is the result of following [Lazy Foo's excellent guide](http://laz
 
 For now it's a simple SDL instance that displays joystick input, a background sprite, and a controllable player sprite.
 
+![hockey screenshot 2](https://raw.githubusercontent.com/davgra04/hockey/addingcollision/screenshot2.png)
 ![hockey screenshot](https://raw.githubusercontent.com/davgra04/hockey/master/screenshot.png)
