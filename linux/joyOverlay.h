@@ -9,7 +9,13 @@ class STexture;
 
 class joyOverlay {
 private:
-	const static int NUM_BUTTONS = 14;
+	const static int NUM_BUTTONS = 15;
+
+	const static int DISP_SIZE_RANGE = 40;
+	const static int DISP_SIZE_CENTER = 2;
+	const static int DISP_SIZE_BUFFER = 3;
+	const static int DISP_SIZE_TRIG_HEIGHT = 8;
+	const static int DISP_SIZE_BUTTON = 12;
 
 	// Thumbstick
 	STexture* activePosition;
@@ -21,17 +27,29 @@ private:
 	STexture* buttonOn;
 
 	// Text Output
-	STexture* dispXAxis;
-	STexture* dispYAxis;
-	STexture* dispAngle;
-	STexture* dispMagnitude;
-	std::stringstream xAxisText;
-	std::stringstream yAxisText;
-	std::stringstream angleText;
-	std::stringstream magnitudeText;
+	STexture* dispLXAxis;
+	STexture* dispLYAxis;
+	STexture* dispLAngle;
+	STexture* dispLMagnitude;
+	std::stringstream axisLXText;
+	std::stringstream axisLYText;
+	std::stringstream angleLText;
+	std::stringstream magnitudeLText;
+	STexture* dispRXAxis;
+	STexture* dispRYAxis;
+	STexture* dispRAngle;
+	STexture* dispRMagnitude;
+	std::stringstream axisRXText;
+	std::stringstream axisRYText;
+	std::stringstream angleRText;
+	std::stringstream magnitudeRText;
 
-	Sint16 xAxis;
-	Sint16 yAxis;
+	Sint16 xAxisL;
+	Sint16 yAxisL;
+	Sint16 xAxisR;
+	Sint16 yAxisR;
+	Sint16 trigL;
+	Sint16 trigR;
 
 	bool buttonStates[NUM_BUTTONS];
 	std::string buttonNames[NUM_BUTTONS];
@@ -58,7 +76,15 @@ public:
 	~joyOverlay();
 
 	void getState();
+
+	void oldrender();
+	void newrender();
 	void render();
+
+	Sint16 getLXAxis();
+	Sint16 getLYAxis();
+
+	int convertSDLColorToHex(SDL_Color col);
 
 };
 

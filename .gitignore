@@ -28,3 +28,9 @@
 *.exe
 *.out
 *.app
+
+# Builds of the hockey game
+/linux/hockey
+/linux/linuxver
+
+

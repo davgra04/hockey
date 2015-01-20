@@ -8,8 +8,10 @@ class joyOverlay;
 class devgruGameIcon;
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 854;
-const int SCREEN_HEIGHT = 480;
+// const int SCREEN_WIDTH = 854;
+// const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 1708;
+const int SCREEN_HEIGHT = 960;
 
 //Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 8000;

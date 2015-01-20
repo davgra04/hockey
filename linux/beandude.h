@@ -37,6 +37,9 @@ private:
 	bool facingLeft;
 	int curAnimState;
 
+	// Is beandude selected?
+	bool isActive;
+
 	// beandude's collision box
 	SDL_Rect mCollider;
 
@@ -49,7 +52,7 @@ public:
 	//max velocity of beandude
 	static const int BEANDUDE_VELOCITY = 1;
 
-	beandude(int x=0, int y=0, double scl=0.0);
+	beandude(int x=0, int y=0, double scl=0.0, bool actv=false);
 	~beandude();
 	
 	//Takes key presses and adjusts beandude's velocity
@@ -60,6 +63,10 @@ public:
 
 	//Renders beandude
 	void render();
+
+	//Sets or gets whether beandude listens to controller input
+	void setActive(bool actv=true);
+	bool getActive();
 
 };
 

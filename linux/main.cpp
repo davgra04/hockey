@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string>
 #include <cmath>
+#include <iostream>
 #include "globals.h"
 #include "STexture.h"
 #include "STimer.h"
@@ -58,8 +59,8 @@ bool init()
 	}
 	else
 	{
-		//Set texture filtering to linear
-		if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) )
+		//Set texture filtering to none
+		if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "0" ) )
 		{
 			printf( "Warning: Linear texture filtering not enabled!" );
 		}
@@ -80,7 +81,7 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "Hockey", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -191,10 +192,11 @@ int main( int argc, char* args[] )
 			jArrow = new joyArrow();
 
 			//Create joyOverlay
-			jOverlay = new joyOverlay(0, 12, 0.25);
+			jOverlay = new joyOverlay(3, 12, 1.0);
 
 			//Create gameIcon
-			gameIcon = new devgruGameIcon(240, 219, 1.0);
+			gameIcon = new devgruGameIcon(SCREEN_WIDTH/2 - 160, 40, 1.0);
+			// gameIcon = new devgruGameIcon(240, 219, 1.0);
 
 			//frame display
 			SDL_Color textColor = { 0, 80, 255, 255 };
@@ -208,10 +210,15 @@ int main( int argc, char* args[] )
             STimer* capTimer = new STimer();
 
 			//beandude
-			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 1.0);
+			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 1.0, true);
+			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 1.0, false);
 
 			// start frames timer
             fpsTimer->start();
+
+            // hockey rink background texture
+            STexture hockeyRink = STexture();
+            hockeyRink.loadFromFile("assets/hockeyrink/hockeyrink3test4.png");
 
 			//While application is running
 			while( !quit )
@@ -228,11 +235,44 @@ int main( int argc, char* args[] )
 
 					//Update beandude
 					bDude->handleEvent(e);
+					otherDude->handleEvent(e);
 
 					//User requests quit
 					if( e.type == SDL_QUIT )
 					{
 						quit = true;
+					}
+					else if( e.type == SDL_JOYAXISMOTION )
+					{
+						std::cout << "A joy axis event occurred!\n"
+								  << "  joystick: " << e.jaxis.which
+								  << "  axis index: " << (int)e.jaxis.axis
+								  << "  value: " << e.jaxis.value << std::endl;
+					}
+					else if( e.type == SDL_JOYHATMOTION )
+					{
+						std::cout << "A joy hat event has occurred!\n"
+								  << "  joystick: " << e.jhat.which
+								  << "  hat index: " << e.jhat.hat
+								  << "  value: " << e.jhat.value << std::endl;
+					}
+					else if( e.type == SDL_JOYBALLMOTION )
+					{
+						std::cout << "A trackball event has occurred!\n"
+								  << "  joystick: " << e.jball.which
+								  << "  ball index: " << e.jball.ball
+								  << "  value: " << e.jball.xrel << "," << e.jball.yrel << std::endl;
+					}
+					else if( e.type == SDL_JOYBUTTONDOWN )
+					{
+						std::cout << "A controller button event has occurred!\n"
+								  << "  joystick: " << e.jbutton.which
+								  << "  button: " << (int)e.jbutton.button
+								  << "  state: " << (int)e.jbutton.state << std::endl;
+						if( (int)e.jbutton.button == 4 || (int)e.jbutton.button == 5){
+							bDude->setActive(!bDude->getActive());
+							otherDude->setActive(!bDude->getActive());
+						}
 					}
 					else if( e.type == SDL_JOYAXISMOTION )
 					{
@@ -245,44 +285,6 @@ int main( int argc, char* args[] )
 
 							jArrow->setAngle(rotation);
 							
-							
-							
-							//X axis motion
-							if( e.jaxis.axis == 0 )
-							{
-								//Left of dead zone
-								if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
-								{
-									xDir = -1;
-								}
-								//Right of dead zone
-								else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
-								{
-									xDir =  1;
-								}
-								else
-								{
-									xDir = 0;
-								}
-							}
-							//Y axis motion
-							else if( e.jaxis.axis == 1 )
-							{
-								//Below of dead zone
-								if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
-								{
-									yDir = -1;
-								}
-								//Above of dead zone
-								else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
-								{
-									yDir =  1;
-								}
-								else
-								{
-									yDir = 0;
-								}
-							}
 						}
 					}
 				}
@@ -298,20 +300,10 @@ int main( int argc, char* args[] )
 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 				SDL_RenderClear( gRenderer );
 
-				//Calculate angle
-				double joystickAngle = atan2( (double)yDir, (double)xDir ) * ( 180.0 / M_PI );
-				
-				//Correct angle
-				if( xDir == 0 && yDir == 0 )
-				{
-					joystickAngle = 0;
-				}
+				//Draw hockey rink
+				hockeyRink.render(0, 80, NULL, 0.0, 3.0, NULL, SDL_FLIP_NONE);
 
 				//Draw arrow
-				jArrow->render(50, 420);
-
-				//Draw overlay
-				jOverlay->render();
 
 				//Draw gameIcon
 				gameIcon->render(frame, (int)(frame)%360, 0.0, 1.0);
@@ -325,6 +317,12 @@ int main( int argc, char* args[] )
 				//Draw beandude
 				bDude->move();
 				bDude->render();
+				otherDude->move();
+				otherDude->render();
+				jArrow->render(50, 420);
+
+				//Draw overlay
+				jOverlay->render();
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
