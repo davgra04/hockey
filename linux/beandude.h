@@ -15,13 +15,13 @@ private:
 		ANIM_JUMP
 	};
 
-	static const int NUM_BUTTONS = 14;
-
 	STexture* spriteSheet;
 	STexture* debugInfo;
 	std::stringstream debugText;
 	SDL_Rect* clip;
 	int animFrame;
+
+	SDL_Rect collision;
 
 	// Animations
 	static const int ANIM_WALKFRAMES = 4;
@@ -30,9 +30,10 @@ private:
 	int anim_idleCycle[ANIM_IDLEFRAMES];
 
 	// Display Position
-	int posX, posY;
+	double posX, posY;
 	double scale;
-	int velX, velY;
+	double velX, velY;
+	double velMultiplier;
 
 	bool facingLeft;
 	int curAnimState;
@@ -50,10 +51,13 @@ public:
 	static const int BEANDUDE_HEIGHT = 10;
 
 	//max velocity of beandude
-	static const int BEANDUDE_VELOCITY = 1;
+	static const int BEANDUDE_VELOCITY = 2;
 
 	beandude(int x=0, int y=0, double scl=0.0, bool actv=false);
 	~beandude();
+
+	// Calculates and updates movement. Helper for handleEvent()
+	void handleEventMovement( SDL_Event& e );
 	
 	//Takes key presses and adjusts beandude's velocity
 	void handleEvent( SDL_Event& e );

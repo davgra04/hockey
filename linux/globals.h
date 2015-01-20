@@ -3,7 +3,6 @@
 
 // pre-declare classes
 class STexture;
-class joyArrow;
 class joyOverlay;
 class devgruGameIcon;
 
@@ -14,7 +13,7 @@ const int SCREEN_WIDTH = 1708;
 const int SCREEN_HEIGHT = 960;
 
 //Analog joystick dead zone
-const int JOYSTICK_DEAD_ZONE = 8000;
+const int JOYSTICK_DEAD_ZONE = 6000;
 
 //The window we'll be rendering to
 extern SDL_Window* gWindow;
@@ -29,9 +28,6 @@ extern std::string gFontName;
 
 //Game Controller 1 handler
 extern SDL_Joystick* gGameController;
-
-// global joyArrow
-extern joyArrow* jArrow;
 
 // global joyOverlay
 extern joyOverlay* jOverlay;

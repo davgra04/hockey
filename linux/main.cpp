@@ -9,7 +9,6 @@
 #include "globals.h"
 #include "STexture.h"
 #include "STimer.h"
-#include "joyArrow.h"
 #include "joyOverlay.h"
 #include "devgruGameIcon.h"
 #include "beandude.h"
@@ -28,9 +27,6 @@ std::string gFontName = "Squarea Regular.ttf";
 
 //Game Controller 1 handler
 SDL_Joystick* gGameController = NULL;
-
-// global joyArrow
-joyArrow* jArrow = NULL;
 
 // global joyOverlay
 joyOverlay* jOverlay = NULL;
@@ -188,9 +184,6 @@ int main( int argc, char* args[] )
 			int xDir = 0;
 			int yDir = 0;
 
-			//Create joyArrow
-			jArrow = new joyArrow();
-
 			//Create joyOverlay
 			jOverlay = new joyOverlay(3, 12, 1.0);
 
@@ -210,8 +203,8 @@ int main( int argc, char* args[] )
             STimer* capTimer = new STimer();
 
 			//beandude
-			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 1.0, true);
-			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 1.0, false);
+			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 7.0, true);
+			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 4.0, false);
 
 			// start frames timer
             fpsTimer->start();
@@ -244,47 +237,34 @@ int main( int argc, char* args[] )
 					}
 					else if( e.type == SDL_JOYAXISMOTION )
 					{
-						std::cout << "A joy axis event occurred!\n"
-								  << "  joystick: " << e.jaxis.which
-								  << "  axis index: " << (int)e.jaxis.axis
-								  << "  value: " << e.jaxis.value << std::endl;
+						// std::cout << "A joy axis event occurred!\n"
+						// 		  << "  joystick: " << e.jaxis.which
+						// 		  << "  axis index: " << (int)e.jaxis.axis
+						// 		  << "  value: " << e.jaxis.value << std::endl;
 					}
 					else if( e.type == SDL_JOYHATMOTION )
 					{
-						std::cout << "A joy hat event has occurred!\n"
-								  << "  joystick: " << e.jhat.which
-								  << "  hat index: " << e.jhat.hat
-								  << "  value: " << e.jhat.value << std::endl;
+						// std::cout << "A joy hat event has occurred!\n"
+						// 		  << "  joystick: " << e.jhat.which
+						// 		  << "  hat index: " << e.jhat.hat
+						// 		  << "  value: " << e.jhat.value << std::endl;
 					}
 					else if( e.type == SDL_JOYBALLMOTION )
 					{
-						std::cout << "A trackball event has occurred!\n"
-								  << "  joystick: " << e.jball.which
-								  << "  ball index: " << e.jball.ball
-								  << "  value: " << e.jball.xrel << "," << e.jball.yrel << std::endl;
+						// std::cout << "A trackball event has occurred!\n"
+						// 		  << "  joystick: " << e.jball.which
+						// 		  << "  ball index: " << e.jball.ball
+						// 		  << "  value: " << e.jball.xrel << "," << e.jball.yrel << std::endl;
 					}
 					else if( e.type == SDL_JOYBUTTONDOWN )
 					{
-						std::cout << "A controller button event has occurred!\n"
-								  << "  joystick: " << e.jbutton.which
-								  << "  button: " << (int)e.jbutton.button
-								  << "  state: " << (int)e.jbutton.state << std::endl;
+					// 	std::cout << "A controller button event has occurred!\n"
+					// 			  << "  joystick: " << e.jbutton.which
+					// 			  << "  button: " << (int)e.jbutton.button
+					// 			  << "  state: " << (int)e.jbutton.state << std::endl;
 						if( (int)e.jbutton.button == 4 || (int)e.jbutton.button == 5){
 							bDude->setActive(!bDude->getActive());
 							otherDude->setActive(!bDude->getActive());
-						}
-					}
-					else if( e.type == SDL_JOYAXISMOTION )
-					{
-						//Motion on controller 0
-						if( e.jaxis.which == 0 )
-						{						
-							Sint16 x_move = SDL_JoystickGetAxis(gGameController, 0);
-							Sint16 y_move = SDL_JoystickGetAxis(gGameController, 1);
-							double rotation = atan2( (double)y_move, (double)x_move ) * ( 180.0 / M_PI );
-
-							jArrow->setAngle(rotation);
-							
 						}
 					}
 				}
@@ -303,8 +283,6 @@ int main( int argc, char* args[] )
 				//Draw hockey rink
 				hockeyRink.render(0, 80, NULL, 0.0, 3.0, NULL, SDL_FLIP_NONE);
 
-				//Draw arrow
-
 				//Draw gameIcon
 				gameIcon->render(frame, (int)(frame)%360, 0.0, 1.0);
 
@@ -319,7 +297,6 @@ int main( int argc, char* args[] )
 				bDude->render();
 				otherDude->move();
 				otherDude->render();
-				jArrow->render(50, 420);
 
 				//Draw overlay
 				jOverlay->render();

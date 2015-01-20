@@ -1,5 +1,7 @@
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 #include <iostream>
+#include <cmath>
 #include "beandude.h"
 #include "STexture.h"
 #include "globals.h"
@@ -10,6 +12,7 @@ beandude::beandude(int x, int y, double scl, bool actv){
 	posY = y;
 	velX = 0;
 	velY = 0;
+	velMultiplier = 1;
 	scale = scl;
 	facingLeft = false;
 	isActive = actv;
@@ -31,11 +34,51 @@ beandude::beandude(int x, int y, double scl, bool actv){
 
 	clip = new SDL_Rect();
 
+	collision = SDL_Rect();
+	collision.x = 0;
+	collision.y = spriteSheet->getHeight() - 40;
+	collision.w = spriteSheet->getWidth();
+	collision.h = 40;
+
 }
 
 beandude::~beandude(){
 
 	spriteSheet->free();
+
+}
+
+void beandude::handleEventMovement( SDL_Event& e ){
+
+	Sint16 x_move = SDL_JoystickGetAxis(gGameController, 0);
+	Sint16 y_move = SDL_JoystickGetAxis(gGameController, 1);
+
+	//Inside of dead zone
+	if( (x_move > -JOYSTICK_DEAD_ZONE) && (y_move > -JOYSTICK_DEAD_ZONE) &&
+		(x_move < JOYSTICK_DEAD_ZONE) && (y_move < JOYSTICK_DEAD_ZONE) )
+	{
+		velX = 0;
+		velY = 0;
+	}
+	else
+	{
+		Sint16 rButtonAxis = SDL_JoystickGetAxis(gGameController, 5);
+		double multiplier = (rButtonAxis + 32768) / (65536.0);
+		int newVelocity = BEANDUDE_VELOCITY * (1 + multiplier*12);
+		double rotation = atan2( (double)y_move, (double)x_move );
+
+		velX = newVelocity * cos(rotation);					
+		velY = newVelocity * sin(rotation);
+
+		curAnimState = ANIM_WALK;
+		if(velX > 0){
+			facingLeft = false;
+		}
+		else{
+			facingLeft = true;
+		}
+	}
+
 
 }
 	
@@ -47,59 +90,63 @@ void beandude::handleEvent( SDL_Event& e ){
 		{
 			//Motion on controller 0
 			if( e.jaxis.which == 0 )
-			{	
-				Sint16 rButtonAxis = SDL_JoystickGetAxis(gGameController, 5);
-				double multiplier = (rButtonAxis + 32768) / (65536.0);
-				std::cout << "value: " << rButtonAxis << std::endl;
-				std::cout << "multiplier: " << multiplier << std::endl;
-				int newVelocity = BEANDUDE_VELOCITY * (1 + multiplier*9);
-								
+			{
+				//X + Y axis motion
+				if( e.jaxis.axis == 0 || e.jaxis.axis == 1 || e.jaxis.axis == 5)
+				{
+					handleEventMovement(e);
+				}
+				std::cout << "new velocity: (" << velX << ", " << velY << ")" << std::endl;
+
+				// Old, 8 direction style			
 				//X axis motion
-				if( e.jaxis.axis == 0 )
-				{
-					//Left of dead zone
-					if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
-					{
-						// velX = -BEANDUDE_VELOCITY;
-						velX = -newVelocity;
-						curAnimState = ANIM_WALK;
-						facingLeft = true;
-					}
-					//Right of dead zone
-					else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
-					{
-						// velX = BEANDUDE_VELOCITY;
-						velX = newVelocity;
-						curAnimState = ANIM_WALK;
-						facingLeft = false;
-					}
-					else
-					{
-						velX = 0;
-					}
-				}
-				//Y axis motion
-				else if( e.jaxis.axis == 1 )
-				{
-					//Below of dead zone
-					if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
-					{
-						// velY = -BEANDUDE_VELOCITY;
-						velY = -newVelocity;
-						curAnimState = ANIM_WALK;
-					}
-					//Above of dead zone
-					else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
-					{
-						// velY = BEANDUDE_VELOCITY;
-						velY = newVelocity;
-						curAnimState = ANIM_WALK;
-					}
-					else
-					{
-						velY = 0;
-					}
-				}
+				// if( e.jaxis.axis == 0 )
+				// {
+				// 	//Left of dead zone
+				// 	if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
+				// 	{
+				// 		// velX = -BEANDUDE_VELOCITY;
+				// 		velX = -newVelocity;
+				// 		curAnimState = ANIM_WALK;
+				// 		facingLeft = true;
+				// 	}
+				// 	//Right of dead zone
+				// 	else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
+				// 	{
+				// 		// velX = BEANDUDE_VELOCITY;
+				// 		velX = newVelocity;
+				// 		curAnimState = ANIM_WALK;
+				// 		facingLeft = false;
+				// 	}
+				// 	else
+				// 	{
+				// 		velX = 0;
+				// 	}
+				// }
+				// //Y axis motion
+				// else if( e.jaxis.axis == 1 )
+				// {
+				// 	//Below of dead zone
+				// 	if( e.jaxis.value < -JOYSTICK_DEAD_ZONE )
+				// 	{
+				// 		// velY = -BEANDUDE_VELOCITY;
+				// 		velY = -newVelocity;
+				// 		curAnimState = ANIM_WALK;
+				// 	}
+				// 	//Above of dead zone
+				// 	else if( e.jaxis.value > JOYSTICK_DEAD_ZONE )
+				// 	{
+				// 		// velY = BEANDUDE_VELOCITY;
+				// 		velY = newVelocity;
+				// 		curAnimState = ANIM_WALK;
+				// 	}
+				// 	else
+				// 	{
+				// 		velY = 0;
+				// 	}
+				// }
+
+
 			}
 		}
 	}
@@ -132,15 +179,15 @@ void beandude::render(){
 	// Set sprite clip
 	if( curAnimState == ANIM_WALK ){
 		clip->x = 0;
-		clip->y = anim_walkCycle[frame/4 % ANIM_WALKFRAMES] * 30;
-		clip->w = 30;
-		clip->h = 30;
+		clip->y = anim_walkCycle[frame/4 % ANIM_WALKFRAMES] * BEANDUDE_HEIGHT;
+		clip->w = BEANDUDE_WIDTH;
+		clip->h = BEANDUDE_HEIGHT;
 	}
 	else{
 		clip->x = 0;
-		clip->y = anim_idleCycle[frame/16 % ANIM_IDLEFRAMES] * 30;
-		clip->w = 30;
-		clip->h = 30;
+		clip->y = anim_idleCycle[frame/16 % ANIM_IDLEFRAMES] * BEANDUDE_HEIGHT;
+		clip->w = BEANDUDE_WIDTH;
+		clip->h = BEANDUDE_HEIGHT;
 	}
 	
 	// Render
@@ -151,12 +198,25 @@ void beandude::render(){
 		spriteSheet->render(posX, posY, clip, 0.0, scale, NULL, SDL_FLIP_HORIZONTAL);
 	}
 	
-
+	// Render debug info
 	SDL_Color textColor = { 0, 80, 255, 255 };
 	debugText.str("");
 	debugText << "(" << posX << "," << posY << ") animState:" << curAnimState;
 	debugInfo->loadFromRenderedText(debugText.str().c_str(), textColor);
-	debugInfo->render(posX + 30, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+	debugInfo->render(posX + BEANDUDE_WIDTH*scale, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+
+	// Render collision box
+	SDL_Color colorBounds = { 0, 80, 255, 255 };
+
+	collision.x = posX + 2*scale;
+	collision.y = posY + 7*scale;
+	collision.w = 6 * scale;
+	collision.h = 3 * scale;
+
+	rectangleRGBA(gRenderer, 
+				  collision.x, collision.y,
+				  collision.x + collision.w, collision.y + collision.h, 
+				  colorBounds.r, colorBounds.g, colorBounds.b, colorBounds.a);
 
 }
 
