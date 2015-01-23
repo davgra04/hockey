@@ -1,11 +1,14 @@
 #ifndef _JOYOVERLAY_H_
 #define _JOYOVERLAY_H_
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_ttf.h>
 #include <cmath>
 #include <sstream>
-#include <SDL2/SDL.h>
-
-class STexture;
+#include <iostream>
+#include "globals.h"
+#include "STexture.h"
 
 class joyOverlay {
 private:
@@ -17,33 +20,22 @@ private:
 	const static int DISP_SIZE_TRIG_HEIGHT = 8;
 	const static int DISP_SIZE_BUTTON = 12;
 
-	// Thumbstick
-	STexture* activePosition;
-	STexture* deadzone;
-	STexture* fullRange;
-
-	// Buttons
-	STexture* buttonOff;
-	STexture* buttonOn;
-
-	// Text Output
+	// Texture text and string streams for L Thumbstick Info
 	STexture* dispLXAxis;
 	STexture* dispLYAxis;
 	STexture* dispLAngle;
-	STexture* dispLMagnitude;
 	std::stringstream axisLXText;
 	std::stringstream axisLYText;
 	std::stringstream angleLText;
-	std::stringstream magnitudeLText;
+	// Texture text and string streams for R Thumbstick Info
 	STexture* dispRXAxis;
 	STexture* dispRYAxis;
 	STexture* dispRAngle;
-	STexture* dispRMagnitude;
 	std::stringstream axisRXText;
 	std::stringstream axisRYText;
 	std::stringstream angleRText;
-	std::stringstream magnitudeRText;
 
+	// Raw values for joy axes
 	Sint16 xAxisL;
 	Sint16 yAxisL;
 	Sint16 xAxisR;
@@ -55,7 +47,6 @@ private:
 	std::string buttonNames[NUM_BUTTONS];
 	STexture* dispButtons[NUM_BUTTONS];
 
-
 	bool buttonA;
 	bool buttonB;
 	bool buttonX;
@@ -65,6 +56,9 @@ private:
 	bool buttonL;
 	bool buttonR;
 
+	SDL_Color uiMainColor;
+	SDL_Color uiBkgColor;
+
 	// Display Position
 	int posX;
 	int posY;
@@ -72,12 +66,11 @@ private:
 
 public:
 
-	joyOverlay(int x=0, int y=0, double scl=0.0);
+	joyOverlay(int x=0, int y=0, double scl=0.0, SDL_Color mainColor={0, 160, 255, 255}, SDL_Color bkgColor={0, 0, 0, 32});
 	~joyOverlay();
 
 	void getState();
 
-	void oldrender();
 	void newrender();
 	void render();
 
