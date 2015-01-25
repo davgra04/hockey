@@ -226,7 +226,7 @@ int main( int argc, char* args[] )
 			int yDir = 0;
 
 			//Create joyOverlay
-			int joyXIncrement = 210;
+			int joyXIncrement = 180;
 
 			SDL_Color initColorA = {0, 160, 255, 255};
 			SDL_Color initColorB;
@@ -236,17 +236,17 @@ int main( int argc, char* args[] )
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
 			jOverlay0 = new joyOverlay(3+0*joyXIncrement, 12, gGameController0, 1.0, initColorA, initColorB);
-			initColorA = {160, 0, 255, 255};
+			initColorA = {109, 255, 1, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
 			jOverlay1 = new joyOverlay(3+1*joyXIncrement, 12, gGameController1, 1.0, initColorA, initColorB);
-			initColorA = {0, 255, 0, 255};
+			initColorA = {255, 31, 1, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
 			jOverlay2 = new joyOverlay(3+2*joyXIncrement, 12, gGameController2, 1.0, initColorA, initColorB);
-			initColorA = {255, 160, 0, 255};
+			initColorA = {103, 1, 255, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
@@ -268,8 +268,13 @@ int main( int argc, char* args[] )
             STimer* capTimer = new STimer();
 
 			//beandude
-			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 7.0, true, gGameController0);
-			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 44.0, true, gGameController1);
+			beandude* bDude0 = new beandude( SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 100, 3.0, true, gGameController0);
+			beandude* bDude1 = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 - 100, 3.0, true, gGameController1);
+			beandude* bDude2 = new beandude( SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 100, 3.0, true, gGameController2);
+			beandude* bDude3 = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 3.0, true, gGameController3);
+			bDude1->setBeandudeColor(beandude::GREEN);
+			bDude2->setBeandudeColor(beandude::RED);
+			bDude3->setBeandudeColor(beandude::PURPLE);
 
 			// start frames timer
             fpsTimer->start();
@@ -295,8 +300,8 @@ int main( int argc, char* args[] )
 					jOverlay3->updateControllerState();
 
 					//Update beandude
-					// bDude->handleEvent(e);
-					// otherDude->handleEvent(e);
+					// bDude0->handleEvent(e);
+					// bDude1->handleEvent(e);
 
 					//User requests quit
 					if( e.type == SDL_QUIT )
@@ -337,8 +342,8 @@ int main( int argc, char* args[] )
 					// 			  << "  button: " << (int)e.jbutton.button
 					// 			  << "  state: " << (int)e.jbutton.state << std::endl;
 						// if( (int)e.jbutton.button == 4 || (int)e.jbutton.button == 5){
-						// 	bDude->setActive(!bDude->getActive());
-						// 	otherDude->setActive(!otherDude->getActive());
+						// 	bDude0->setActive(!bDude0->getActive());
+						// 	bDude1->setActive(!bDude1->getActive());
 						// }
 					}
 				}
@@ -355,7 +360,7 @@ int main( int argc, char* args[] )
 				SDL_RenderClear( gRenderer );
 
 				//Draw hockey rink
-				hockeyRink.render(0, 80, NULL, 0.0, 3.0, NULL, SDL_FLIP_NONE);
+				hockeyRink.render(0, 81, NULL, 0.0, 3.0, NULL, SDL_FLIP_NONE);
 
 				//Draw gameIcon
 				gameIcon->render(frame, (int)(frame)%360, 0.0, 1.0);
@@ -367,10 +372,14 @@ int main( int argc, char* args[] )
 				frameTex->render(0, 0, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 
 				//Draw beandude
-				bDude->move();
-				bDude->render();
-				otherDude->move();
-				otherDude->render();
+				bDude0->move();
+				bDude0->render();
+				bDude1->move();
+				bDude1->render();
+				bDude2->move();
+				bDude2->render();
+				bDude3->move();
+				bDude3->render();
 
 				//Draw overlay
 				jOverlay0->render();

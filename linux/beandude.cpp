@@ -1,10 +1,4 @@
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-#include <iostream>
-#include <cmath>
 #include "beandude.h"
-#include "STexture.h"
-#include "globals.h"
 
 beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 
@@ -31,7 +25,7 @@ beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 
 	animFrame = 0;
 	spriteSheet = new STexture();
-	spriteSheet->loadFromFile("assets/beandude/beandude_sprite.png");
+	// spriteSheet->loadFromFile("assets/beandude/beandude_sprite.png");
 	debugInfo = new STexture();
 
 	clip = new SDL_Rect();
@@ -44,7 +38,16 @@ beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 
 	allCollisionBoxes.push_back(&collision);
 
-	colorBounds = { 0, 80, 255, 255 };
+	// colorBounds = { 0, 80, 255, 255 };
+
+	// textColor = { 0, 80, 255, 255 };
+
+	setBeandudeColor(BLUE);
+
+	colorBounds.r = textColor.r / 2;
+	colorBounds.g = textColor.g / 2;
+	colorBounds.b = textColor.b / 2;
+	colorBounds.a = 255;
 
 }
 
@@ -58,32 +61,105 @@ void beandude::handleEventMovement(){
 
 	Sint16 x_move = SDL_JoystickGetAxis(controller, 0);
 	Sint16 y_move = SDL_JoystickGetAxis(controller, 1);
+	Sint16 rButtonAxis = SDL_JoystickGetAxis(controller, 5);
 
-	//Inside of dead zone
-	if( (x_move > -JOYSTICK_DEAD_ZONE) && (y_move > -JOYSTICK_DEAD_ZONE) &&
-		(x_move < JOYSTICK_DEAD_ZONE) && (y_move < JOYSTICK_DEAD_ZONE) )
-	{
-		velX = 0;
-		velY = 0;
-	}
-	else
-	{
-		Sint16 rButtonAxis = SDL_JoystickGetAxis(controller, 5);
-		double multiplier = (rButtonAxis + 32768) / (65536.0);
-		int newVelocity = BEANDUDE_VELOCITY * (1 + multiplier*12);
-		double rotation = atan2( (double)y_move, (double)x_move );
+	double rotation = atan2( (double)y_move, (double)x_move );
+	double rawMagnitude = sqrt( pow(x_move, 2) + pow(y_move, 2)) - JOYSTICK_DEAD_ZONE;
 
-		velX = newVelocity * cos(rotation);					
-		velY = newVelocity * sin(rotation);
+	if(rawMagnitude > JOYSTICK_DEAD_ZONE){
 
-		curAnimState = ANIM_WALK;
+
+
+		double multiplierX = (x_move + 32768) / (65536.0);
+		double multiplierY = (x_move + 32768) / (65536.0);
+		double multiplierMag = (rawMagnitude - JOYSTICK_DEAD_ZONE) / (32768.0 - JOYSTICK_DEAD_ZONE);
+		double multiplierTrig = (rButtonAxis + 32768) / (65536.0);
+		double newVelocity = BEANDUDE_VELOCITY * multiplierMag;
+		if(multiplierTrig > 0.25){
+			newVelocity *= 1 + (multiplierTrig - 0.25)*2*4/3.0;
+		}
+		double currentMagnitude = sqrt(pow(velX,2)+pow(velY,2));	
+
+		// Decay speed but update direction
+		if(newVelocity < currentMagnitude){
+			velX = currentMagnitude * cos(rotation);
+			velY = currentMagnitude * sin(rotation);
+			velX *= 0.99;
+			velY *= 0.99;
+		}
+		// Update speed and direction
+		else{	
+			velX = newVelocity * cos(rotation);					
+			velY = newVelocity * sin(rotation);
+		}
+
+
+		// double newVelocityX = newVelocity * cos(rotation);					
+		// double newVelocityY = newVelocity * sin(rotation);
+
+		
 		if(velX > 0){
 			facingLeft = false;
 		}
 		else{
 			facingLeft = true;
 		}
+
+		currentMagnitude = sqrt(pow(velX,2)+pow(velY,2));
+		if(currentMagnitude < 0.02){
+			curAnimState = ANIM_IDLE;
+		}
+		else{
+			curAnimState = ANIM_WALK;
+		}
+
 	}
+	else{
+		//decay velocity and update direction
+		velX *= 0.99;
+		velY *= 0.99;
+
+
+
+		curAnimState = ANIM_IDLE;
+
+	}
+
+	// if(newVelocity < 0.0001){
+	// 	velX = 0;
+	// }
+	// if(velY < 0.0001){
+	// 	velY = 0;
+	// }
+	// Sint16 x_move = SDL_JoystickGetAxis(controller, 0);
+	// Sint16 y_move = SDL_JoystickGetAxis(controller, 1);
+
+	// //Inside of dead zone
+	// if( (x_move > -JOYSTICK_DEAD_ZONE) && (y_move > -JOYSTICK_DEAD_ZONE) &&
+	// 	(x_move < JOYSTICK_DEAD_ZONE) && (y_move < JOYSTICK_DEAD_ZONE) )
+	// {
+	// 	velX = 0;
+	// 	velY = 0;
+	// }
+	// else
+	// {
+	// 	Sint16 rButtonAxis = SDL_JoystickGetAxis(controller, 5);
+	// 	// double multiplier = (rButtonAxis + 32768) / (65536.0);
+	// 	double multiplier = (rButtonAxis + 32768) / (65536.0);
+	// 	double newVelocity = BEANDUDE_VELOCITY * (1 + multiplier*6);
+	// 	double rotation = atan2( (double)y_move, (double)x_move );
+
+	// 	velX = newVelocity * cos(rotation);					
+	// 	velY = newVelocity * sin(rotation);
+
+	// 	curAnimState = ANIM_WALK;
+	// 	if(velX > 0){
+	// 		facingLeft = false;
+	// 	}
+	// 	else{
+	// 		facingLeft = true;
+	// 	}
+	// }
 
 
 }
@@ -159,6 +235,21 @@ void beandude::handleEvent( SDL_Event& e ){
 
 }
 
+//Checks current collision box for collision against all others
+bool beandude::checkCollision(){
+
+	for(int i=0; i<allCollisionBoxes.size(); ++i){
+		if(allCollisionBoxes[i] == &collision) continue;
+
+		if(isCollision(&collision, allCollisionBoxes[i])){
+			return true;
+		}
+	}
+
+	return false;
+
+}
+
 //Moves beandude and might eventually check collision
 void beandude::move(){
 
@@ -169,48 +260,101 @@ void beandude::move(){
 
 	if(isActive){
 
+		// colorBounds = { 0, 80, 255, 255 };
+		colorBounds.r = textColor.r / 2;
+		colorBounds.g = textColor.g / 2;
+		colorBounds.b = textColor.b / 2;
+		colorBounds.a = 255;
+
+		// Check collision against each collisionBox for X movement
 		collision.x += velX;
-		collision.y += velY;
-		colorBounds = { 0, 80, 255, 255 };
-
-		// Check collision against each collisionBox
-		for(int i=0; i<allCollisionBoxes.size(); ++i){
-			if(allCollisionBoxes[i] == &collision) continue;
-
-			// Check x movement
-			if(isCollision(&collision, allCollisionBoxes[i])){
-				// Move back and render collision box red
-				while(isCollision(&collision, allCollisionBoxes[i]) && velX > 0){
-					collision.x -= velX;
-					velX--;
-					collision.x += velX;
-				}
-				posX += velX;
-				velX = 0;
-				colorBounds = { 255, 0, 0, 255 };
+		if(checkCollision()){
+			// Move back and render collision box red
+			while(checkCollision() && velX > 0){
+				collision.x -= velX;
+				velX--;
+				collision.x += velX;
 			}
-			else{
-				// render collision box normally
-				posX += velX;
-			}
-
-			// Check y movement
-			if(isCollision(&collision, allCollisionBoxes[i])){
-				// Move back and render collision box red
-				collision.y -= velY;
-				colorBounds = { 255, 0, 0, 255 };
-			}
-			else{
-				// render collision box normally
-				posY += velY;
-			}
+			if(velX < 0) velX = 0;
+			posX += velX;
+			velX = 0;
+			colorBounds = { 255, 0, 0, 255 };
 		}
+		else{
+			// render collision box normally
+			posX += velX;
+		}
+
+		// Check collision against each collisionBox for Y movement
+		collision.y += velY;
+		if(checkCollision()){
+			// Move back and render collision box red
+			while(checkCollision() && velY > 0){
+				collision.y -= velY;
+				velY--;
+				collision.y += velY;
+			}
+			if(velY < 0) velY = 0;
+			posY += velY;
+			velY = 0;
+			colorBounds = { 255, 0, 0, 255 };
+		}
+		else{
+			// render collision box normally
+			posY += velY;
+		}
+
+
+
+
+		// // Check x movement
+		// if(isCollision(&collision, allCollisionBoxes[i])){
+		// 	// Move back and render collision box red
+		// 	while(isCollision(&collision, allCollisionBoxes[i]) && velX > 0){
+		// 		collision.x -= velX;
+		// 		velX--;
+		// 		collision.x += velX;
+		// 	}
+		// 	posX += velX;
+		// 	velX = 0;
+		// 	colorBounds = { 255, 0, 0, 255 };
+		// }
+		// else{
+		// 	// render collision box normally
+		// 	posX += velX;
+		// }
+
+		// Check y movement
+		// if(isCollision(&collision, allCollisionBoxes[i])){
+		// 	// Move back and render collision box red
+		// 	collision.y -= velY;
+		// 	colorBounds = { 255, 0, 0, 255 };
+		// }
+		// if(isCollision(&collision, allCollisionBoxes[i])){
+		// 	// Move back and render collision box red
+		// 	while(isCollision(&collision, allCollisionBoxes[i]) && velY > 0){
+		// 		collision.y -= velY;
+		// 		velY--;
+		// 		collision.y += velY;
+		// 	}
+		// 	posY += velY;
+		// 	velY = 0;
+		// 	colorBounds = { 255, 0, 0, 255 };
+		// }
+		// else{
+		// 	// render collision box normally
+		// 	posY += velY;
+		// }
 
 	}
 	else{
 		velX = 0;
 		velY = 0;
-		colorBounds = { 0, 80, 255, 255 };
+		// colorBounds = { 0, 80, 255, 255 };
+		colorBounds.r = textColor.r / 2;
+		colorBounds.g = textColor.g / 2;
+		colorBounds.b = textColor.b / 2;
+		colorBounds.a = 255;
 	}
 }
 
@@ -237,16 +381,17 @@ void beandude::render(){
 	
 	// Render
 	if(facingLeft){
+		// spriteSheet->render(posX - (int)posX%3, posY - (int)posY%3, clip, 0.0, scale, NULL, SDL_FLIP_NONE);
 		spriteSheet->render(posX, posY, clip, 0.0, scale, NULL, SDL_FLIP_NONE);
 	}
 	else{
+		// spriteSheet->render(posX - (int)posX%3, posY - (int)posY%3, clip, 0.0, scale, NULL, SDL_FLIP_HORIZONTAL);
 		spriteSheet->render(posX, posY, clip, 0.0, scale, NULL, SDL_FLIP_HORIZONTAL);
 	}
 	
 	// Render debug info
-	SDL_Color textColor = { 0, 80, 255, 255 };
 	debugText.str("");
-	debugText << "(" << posX << "," << posY << ") animState:" << curAnimState;
+	debugText << "(" << (int)posX << "," << (int)posY << ") animState:" << curAnimState;
 	debugInfo->loadFromRenderedText(debugText.str().c_str(), textColor);
 	debugInfo->render(posX + BEANDUDE_WIDTH*scale, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 
@@ -256,10 +401,13 @@ void beandude::render(){
 	collision.w = 6 * scale;
 	collision.h = 3 * scale;
 
-	rectangleRGBA(gRenderer, 
-				  collision.x, collision.y,
-				  collision.x + collision.w, collision.y + collision.h, 
-				  colorBounds.r, colorBounds.g, colorBounds.b, colorBounds.a);
+	for(int i=0; i<1; ++i){
+		rectangleRGBA(gRenderer, 
+					  collision.x + i, collision.y + i,
+					  collision.x + collision.w - i, collision.y + collision.h - i, 
+					  colorBounds.r, colorBounds.g, colorBounds.b, colorBounds.a);
+	}
+
 
 }
 
@@ -272,3 +420,25 @@ bool beandude::getActive(){
 	return isActive;
 }
 
+
+void beandude::setBeandudeColor(beandude::beandudeColor col){
+	if(col == beandude::BLUE){
+		spriteSheet->loadFromFile("assets/beandude/beandude_sprite.png");
+		textColor = {0, 160, 255, 255};
+	}
+	else if(col == beandude::GREEN){
+		spriteSheet->loadFromFile("assets/beandude/beandude_sprite_green.png");
+		textColor = {109, 255, 1, 255};
+	}
+	else if(col == beandude::RED){
+		spriteSheet->loadFromFile("assets/beandude/beandude_sprite_red.png");
+		textColor = {255, 31, 1, 255};
+	}
+	else if(col == beandude::PURPLE){
+		spriteSheet->loadFromFile("assets/beandude/beandude_sprite_purple.png");
+		textColor = {103, 1, 255, 255};
+	}
+
+
+
+}

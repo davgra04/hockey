@@ -1,11 +1,10 @@
 #ifndef _BEANDUDE_H_
 #define _BEANDUDE_H_
 
-#include <cmath>
-#include <sstream>
-#include <SDL2/SDL.h>
+#include "globals.h"
+#include "STexture.h"
 
-class STexture;
+// class STexture;
 
 class beandude {
 private:
@@ -14,6 +13,7 @@ private:
 		ANIM_WALK,
 		ANIM_JUMP
 	};
+
 
 	STexture* spriteSheet;
 	STexture* debugInfo;
@@ -49,14 +49,23 @@ private:
 	// color of collision box
 	SDL_Color colorBounds;
 
+	// color of debug info text
+	SDL_Color textColor;
+
 public:
+	enum beandudeColor {
+		BLUE,
+		GREEN,
+		RED,
+		PURPLE
+	};
 
 	//dimensions of beandude
 	static const int BEANDUDE_WIDTH = 10;
 	static const int BEANDUDE_HEIGHT = 10;
 
 	//max velocity of beandude
-	static const int BEANDUDE_VELOCITY = 2;
+	static const double BEANDUDE_VELOCITY = 3.0;
 
 	beandude(int x=0, int y=0, double scl=0.0, bool actv=false, SDL_Joystick* ctrlr=NULL);
 	~beandude();
@@ -67,6 +76,9 @@ public:
 	//Takes key presses and adjusts beandude's velocity
 	void handleEvent( SDL_Event& e );
 
+	//Checks current collision box for collision against all others
+	bool checkCollision();
+
 	//Moves beandude and might eventually check collision
 	void move();
 
@@ -76,6 +88,9 @@ public:
 	//Sets or gets whether beandude listens to controller input
 	void setActive(bool actv=true);
 	bool getActive();
+
+	//Loads different colored sprite into beandude object
+	void setBeandudeColor(beandudeColor col);
 
 };
 
