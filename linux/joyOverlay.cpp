@@ -1,6 +1,6 @@
 #include "joyOverlay.h"
 
-joyOverlay::joyOverlay(int x, int y, double scl, SDL_Color mainColor, SDL_Color bkgColor){
+joyOverlay::joyOverlay(int x, int y, SDL_Joystick* ctrlr, double scl, SDL_Color mainColor, SDL_Color bkgColor){
 
 	// SDL_Color mainColor = { 0, 80, 255, 255 };
 	uiMainColor = mainColor;
@@ -9,6 +9,8 @@ joyOverlay::joyOverlay(int x, int y, double scl, SDL_Color mainColor, SDL_Color 
 	posX = x;
 	posY = y;
 	scale = scl;
+
+	controller = ctrlr;
 
 	//Setup Button Members
 	buttonNames[0] = "A";	//A
@@ -29,7 +31,7 @@ joyOverlay::joyOverlay(int x, int y, double scl, SDL_Color mainColor, SDL_Color 
 	for(int i=0; i<NUM_BUTTONS; i++){
 		buttonStates[i] = false;
 		dispButtons[i] = new STexture();
-		dispButtons[i]->loadFromRenderedText(buttonNames[i], mainColor);
+		dispButtons[i]->loadFromRenderedText(buttonNames[i], uiMainColor);
 	}
 
 	// Text textures for L Thumbstick info
@@ -68,19 +70,21 @@ joyOverlay::~joyOverlay(){
 
 }
 
-void joyOverlay::getState(){
+void joyOverlay::updateControllerState(){
 
-	xAxisL = SDL_JoystickGetAxis(gGameController, 0);
-	yAxisL = SDL_JoystickGetAxis(gGameController, 1);
+	if(controller != NULL){
+		xAxisL = SDL_JoystickGetAxis(controller, 0);
+		yAxisL = SDL_JoystickGetAxis(controller, 1);
 
-	xAxisR = SDL_JoystickGetAxis(gGameController, 3);
-	yAxisR = SDL_JoystickGetAxis(gGameController, 4);
+		xAxisR = SDL_JoystickGetAxis(controller, 3);
+		yAxisR = SDL_JoystickGetAxis(controller, 4);
 
-	trigL = SDL_JoystickGetAxis(gGameController, 2);
-	trigR = SDL_JoystickGetAxis(gGameController, 5);
+		trigL = SDL_JoystickGetAxis(controller, 2);
+		trigR = SDL_JoystickGetAxis(controller, 5);
 
-	for(int i=0; i<NUM_BUTTONS; i++){
-		buttonStates[i] = (bool) SDL_JoystickGetButton(gGameController, i);
+		for(int i=0; i<NUM_BUTTONS; i++){
+			buttonStates[i] = (bool) SDL_JoystickGetButton(controller, i);
+		}
 	}
 
 }
@@ -89,7 +93,7 @@ void joyOverlay::newrender(){
 
 	int tempx, tempy, tempradius;
 
-	getState();
+	updateControllerState();
 
 	int activeLX = (int)(DISP_SIZE_RANGE * (xAxisL + 32768.0) / 65536.0);	// Value from 0 to DISP_SIZE_RANGE
 	int activeLY = (int)(DISP_SIZE_RANGE * (yAxisL + 32768.0) / 65536.0);	// Value from 0 to DISP_SIZE_RANGE
@@ -102,12 +106,6 @@ void joyOverlay::newrender(){
 
 	int oldPosX = posX;
 	int oldPosY = posY;
-
-	// posX += activeLX/4;
-	// posY += activeLY/4;
-
-	SDL_Color mainColor = { 0, 160, 255, 255 };
-	// SDL_Color mainColor = { 0, 20, 64, 255 };
 
 	// Render L Thumbstick
 	// L Range
@@ -122,7 +120,7 @@ void joyOverlay::newrender(){
 	rectangleRGBA(gRenderer, 
 				  tempx, tempy,
 				  tempx + DISP_SIZE_RANGE*scale, tempy + DISP_SIZE_RANGE*scale, 
-				  mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				  uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 
     // L Active Center
     tempx = posX + activeLX*scale;
@@ -140,7 +138,7 @@ void joyOverlay::newrender(){
 		aacircleRGBA(gRenderer,
 	    			 tempx, tempy, 
 	    			 tempradius, 
-	    			 mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+	    			 uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 	}
 
 	// L Thumb text
@@ -149,8 +147,8 @@ void joyOverlay::newrender(){
 	axisLYText.str("");
 	axisLYText << "Y: " << yAxisL;
 	
-	dispLXAxis->loadFromRenderedText(axisLXText.str().c_str(), mainColor);
-	dispLYAxis->loadFromRenderedText(axisLYText.str().c_str(), mainColor);
+	dispLXAxis->loadFromRenderedText(axisLXText.str().c_str(), uiMainColor);
+	dispLYAxis->loadFromRenderedText(axisLYText.str().c_str(), uiMainColor);
 
 	dispLXAxis->render(posX + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER), posY, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 	dispLYAxis->render(posX + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER), posY + scale * (16.0), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
@@ -170,7 +168,7 @@ void joyOverlay::newrender(){
 	rectangleRGBA(gRenderer, 
 				  tempx, tempy,
 				  tempx + DISP_SIZE_RANGE*scale, tempy + DISP_SIZE_RANGE*scale, 
-				  mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				  uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 
     // R Active Center
 	tempx = posX + activeRX*scale;
@@ -187,7 +185,7 @@ void joyOverlay::newrender(){
 		aacircleRGBA(gRenderer,
 	    			 tempx, tempy, 
 	    			 tempradius, 
-	    			 mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+	    			 uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 	}
 
 
@@ -197,8 +195,8 @@ void joyOverlay::newrender(){
 	axisRYText.str("");
 	axisRYText << "Y: " << yAxisR;
 	
-	dispRXAxis->loadFromRenderedText(axisRXText.str().c_str(), mainColor);
-	dispRYAxis->loadFromRenderedText(axisRYText.str().c_str(), mainColor);
+	dispRXAxis->loadFromRenderedText(axisRXText.str().c_str(), uiMainColor);
+	dispRYAxis->loadFromRenderedText(axisRYText.str().c_str(), uiMainColor);
 
 	dispRXAxis->render(posX + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER), posY + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 	dispRYAxis->render(posX + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER), posY + scale * (DISP_SIZE_RANGE + DISP_SIZE_BUFFER) + scale * (16.0), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
@@ -216,14 +214,14 @@ void joyOverlay::newrender(){
 	rectangleRGBA(gRenderer, 
 				  tempx, tempy,
 				  tempx + DISP_SIZE_RANGE*scale, tempy + DISP_SIZE_TRIG_HEIGHT*scale, 
-				  mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				  uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 
 
 	if(activeLTrig >= 1){
 		boxRGBA(gRenderer, 
 				tempx, tempy,
 				tempx + activeLTrig*scale, tempy + DISP_SIZE_TRIG_HEIGHT*scale, 
-				mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 	}
 
 	// Render R Trigger
@@ -238,13 +236,13 @@ void joyOverlay::newrender(){
 	rectangleRGBA(gRenderer, 
 				  tempx, tempy,
 				  tempx + DISP_SIZE_RANGE*scale, tempy + DISP_SIZE_TRIG_HEIGHT*scale, 
-				  mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				  uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 
 	if(activeRTrig >= 1){
 		boxRGBA(gRenderer, 
 				tempx, tempy,
 				tempx + activeRTrig*scale, tempy + DISP_SIZE_TRIG_HEIGHT*scale, 
-				mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+				uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 	}
 
 	// Render Buttons
@@ -259,7 +257,7 @@ void joyOverlay::newrender(){
 			boxRGBA(gRenderer, 
 					tempButtonX, tempButtonY,
 					tempButtonX + DISP_SIZE_BUTTON*scale, tempButtonY + DISP_SIZE_BUTTON*scale, 
-					mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+					uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 			dispButtons[i]->render(tempButtonX + (DISP_SIZE_BUTTON + DISP_SIZE_BUFFER)*scale, tempButtonY, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 		}
 		else{
@@ -270,7 +268,7 @@ void joyOverlay::newrender(){
 			rectangleRGBA(gRenderer, 
 						  tempButtonX, tempButtonY,
 						  tempButtonX + DISP_SIZE_BUTTON*scale, tempButtonY + DISP_SIZE_BUTTON*scale, 
-						  mainColor.r, mainColor.g, mainColor.b, mainColor.a);
+						  uiMainColor.r, uiMainColor.g, uiMainColor.b, uiMainColor.a);
 		}
 	}
 

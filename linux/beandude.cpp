@@ -6,7 +6,7 @@
 #include "STexture.h"
 #include "globals.h"
 
-beandude::beandude(int x, int y, double scl, bool actv){
+beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 
 	posX = x;
 	posY = y;
@@ -16,6 +16,8 @@ beandude::beandude(int x, int y, double scl, bool actv){
 	scale = scl;
 	facingLeft = false;
 	isActive = actv;
+
+	controller = ctrlr;
 
 	curAnimState = ANIM_IDLE;
 
@@ -40,6 +42,10 @@ beandude::beandude(int x, int y, double scl, bool actv){
 	collision.w = spriteSheet->getWidth();
 	collision.h = 40;
 
+	allCollisionBoxes.push_back(&collision);
+
+	colorBounds = { 0, 80, 255, 255 };
+
 }
 
 beandude::~beandude(){
@@ -48,10 +54,10 @@ beandude::~beandude(){
 
 }
 
-void beandude::handleEventMovement( SDL_Event& e ){
+void beandude::handleEventMovement(){
 
-	Sint16 x_move = SDL_JoystickGetAxis(gGameController, 0);
-	Sint16 y_move = SDL_JoystickGetAxis(gGameController, 1);
+	Sint16 x_move = SDL_JoystickGetAxis(controller, 0);
+	Sint16 y_move = SDL_JoystickGetAxis(controller, 1);
 
 	//Inside of dead zone
 	if( (x_move > -JOYSTICK_DEAD_ZONE) && (y_move > -JOYSTICK_DEAD_ZONE) &&
@@ -62,7 +68,7 @@ void beandude::handleEventMovement( SDL_Event& e ){
 	}
 	else
 	{
-		Sint16 rButtonAxis = SDL_JoystickGetAxis(gGameController, 5);
+		Sint16 rButtonAxis = SDL_JoystickGetAxis(controller, 5);
 		double multiplier = (rButtonAxis + 32768) / (65536.0);
 		int newVelocity = BEANDUDE_VELOCITY * (1 + multiplier*12);
 		double rotation = atan2( (double)y_move, (double)x_move );
@@ -89,14 +95,14 @@ void beandude::handleEvent( SDL_Event& e ){
 		if( e.type == SDL_JOYAXISMOTION )
 		{
 			//Motion on controller 0
-			if( e.jaxis.which == 0 )
-			{
+			// if( e.jaxis.which == controller )
+			// {
 				//X + Y axis motion
 				if( e.jaxis.axis == 0 || e.jaxis.axis == 1 || e.jaxis.axis == 5)
 				{
-					handleEventMovement(e);
+					handleEventMovement();
 				}
-				std::cout << "new velocity: (" << velX << ", " << velY << ")" << std::endl;
+				// std::cout << "new velocity: (" << velX << ", " << velY << ")" << std::endl;
 
 				// Old, 8 direction style			
 				//X axis motion
@@ -147,7 +153,7 @@ void beandude::handleEvent( SDL_Event& e ){
 				// }
 
 
-			}
+			// }
 		}
 	}
 
@@ -159,13 +165,52 @@ void beandude::move(){
 	// Sint16 xVal = jOverlay->getLXAxis();
 	// Sint16 yVal = jOverlay->getLXAxis();
 
-	if(isActive){	
-		posX += velX;
-		posY += velY;
+	handleEventMovement();
+
+	if(isActive){
+
+		collision.x += velX;
+		collision.y += velY;
+		colorBounds = { 0, 80, 255, 255 };
+
+		// Check collision against each collisionBox
+		for(int i=0; i<allCollisionBoxes.size(); ++i){
+			if(allCollisionBoxes[i] == &collision) continue;
+
+			// Check x movement
+			if(isCollision(&collision, allCollisionBoxes[i])){
+				// Move back and render collision box red
+				while(isCollision(&collision, allCollisionBoxes[i]) && velX > 0){
+					collision.x -= velX;
+					velX--;
+					collision.x += velX;
+				}
+				posX += velX;
+				velX = 0;
+				colorBounds = { 255, 0, 0, 255 };
+			}
+			else{
+				// render collision box normally
+				posX += velX;
+			}
+
+			// Check y movement
+			if(isCollision(&collision, allCollisionBoxes[i])){
+				// Move back and render collision box red
+				collision.y -= velY;
+				colorBounds = { 255, 0, 0, 255 };
+			}
+			else{
+				// render collision box normally
+				posY += velY;
+			}
+		}
+
 	}
 	else{
 		velX = 0;
 		velY = 0;
+		colorBounds = { 0, 80, 255, 255 };
 	}
 }
 
@@ -206,8 +251,6 @@ void beandude::render(){
 	debugInfo->render(posX + BEANDUDE_WIDTH*scale, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
 
 	// Render collision box
-	SDL_Color colorBounds = { 0, 80, 255, 255 };
-
 	collision.x = posX + 2*scale;
 	collision.y = posY + 7*scale;
 	collision.w = 6 * scale;

@@ -21,7 +21,6 @@ private:
 	SDL_Rect* clip;
 	int animFrame;
 
-	SDL_Rect collision;
 
 	// Animations
 	static const int ANIM_WALKFRAMES = 4;
@@ -41,8 +40,14 @@ private:
 	// Is beandude selected?
 	bool isActive;
 
+	// SDL_Joystick beandude is listening to
+	SDL_Joystick* controller;
+
 	// beandude's collision box
-	SDL_Rect mCollider;
+	SDL_Rect collision;
+
+	// color of collision box
+	SDL_Color colorBounds;
 
 public:
 
@@ -53,11 +58,11 @@ public:
 	//max velocity of beandude
 	static const int BEANDUDE_VELOCITY = 2;
 
-	beandude(int x=0, int y=0, double scl=0.0, bool actv=false);
+	beandude(int x=0, int y=0, double scl=0.0, bool actv=false, SDL_Joystick* ctrlr=NULL);
 	~beandude();
 
 	// Calculates and updates movement. Helper for handleEvent()
-	void handleEventMovement( SDL_Event& e );
+	void handleEventMovement();
 	
 	//Takes key presses and adjusts beandude's velocity
 	void handleEvent( SDL_Event& e );

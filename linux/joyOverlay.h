@@ -64,12 +64,15 @@ private:
 	int posY;
 	double scale;
 
+	// SDL_Joystick overlay is listening to
+	SDL_Joystick* controller;
+
 public:
 
-	joyOverlay(int x=0, int y=0, double scl=0.0, SDL_Color mainColor={0, 160, 255, 255}, SDL_Color bkgColor={0, 0, 0, 32});
+	joyOverlay(int x=0, int y=0, SDL_Joystick* ctrlr=NULL, double scl=0.0, SDL_Color mainColor={0, 160, 255, 255}, SDL_Color bkgColor={0, 0, 0, 32});
 	~joyOverlay();
 
-	void getState();
+	void updateControllerState();
 
 	void newrender();
 	void render();

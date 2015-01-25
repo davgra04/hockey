@@ -1,11 +1,3 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
-#include <stdio.h>
-#include <string>
-#include <cmath>
-#include <iostream>
 #include "globals.h"
 #include "STexture.h"
 #include "STimer.h"
@@ -26,16 +18,50 @@ int gFontSize = 12;
 std::string gFontName = "Squarea Regular.ttf";
 
 //Game Controller 1 handler
-SDL_Joystick* gGameController = NULL;
+SDL_Joystick* gGameController0 = NULL;
+SDL_Joystick* gGameController1 = NULL;
+SDL_Joystick* gGameController2 = NULL;
+SDL_Joystick* gGameController3 = NULL;
 
 // global joyOverlay
-joyOverlay* jOverlay = NULL;
+joyOverlay* jOverlay0 = NULL;
+joyOverlay* jOverlay1 = NULL;
+joyOverlay* jOverlay2 = NULL;
+joyOverlay* jOverlay3 = NULL;
 
 // global gameicon
 devgruGameIcon* gameIcon = NULL;
 
 // global frame count
 int frame = 0;
+
+// vector of all collision boxes in scene
+std::vector<SDL_Rect*> allCollisionBoxes;
+
+// Function for determining collision
+bool isCollision( SDL_Rect* a, SDL_Rect* b){
+
+	int atop, abottom, aleft, aright;
+	int btop, bbottom, bleft, bright;
+
+	atop = a->y;
+	abottom = a->y + a->h;
+	aleft = a->x;
+	aright = a->x + a->w;
+
+	btop = b->y;
+	bbottom = b->y + b->h;
+	bleft = b->x;
+	bright = b->x + b->w;
+
+	if( abottom <= btop ) return false;
+	if( atop >= bbottom ) return false;
+	if( aright <= bleft ) return false;
+	if( aleft >= bright ) return false;
+
+	return true;
+
+}
 
 // FRAME CONSTANTS
 const int SCREEN_FPS = 60;
@@ -68,11 +94,26 @@ bool init()
 		}
 		else
 		{
-			//Load joystick
-			gGameController = SDL_JoystickOpen( 0 );
-			if( gGameController == NULL )
+			//Load joysticks
+			gGameController0 = SDL_JoystickOpen( 0 );
+			gGameController1 = SDL_JoystickOpen( 1 );
+			gGameController2 = SDL_JoystickOpen( 2 );
+			gGameController3 = SDL_JoystickOpen( 3 );
+			if( gGameController0 == NULL )
 			{
-				printf( "Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError() );
+				printf( "Warning: Unable to open game controller 0! SDL Error: %s\n", SDL_GetError() );
+			}
+			if( gGameController1 == NULL )
+			{
+				printf( "Warning: Unable to open game controller 1! SDL Error: %s\n", SDL_GetError() );
+			}
+			if( gGameController2 == NULL )
+			{
+				printf( "Warning: Unable to open game controller 2! SDL Error: %s\n", SDL_GetError() );
+			}
+			if( gGameController3 == NULL )
+			{
+				printf( "Warning: Unable to open game controller 3! SDL Error: %s\n", SDL_GetError() );
 			}
 		}
 
@@ -139,8 +180,8 @@ bool loadMedia()
 void close()
 {
 	//Close game controller
-	SDL_JoystickClose( gGameController );
-	gGameController = NULL;
+	SDL_JoystickClose( gGameController0 );
+	gGameController0 = NULL;
 
 	//Free global font
 	TTF_CloseFont( gFont );
@@ -185,7 +226,31 @@ int main( int argc, char* args[] )
 			int yDir = 0;
 
 			//Create joyOverlay
-			jOverlay = new joyOverlay(3, 12, 1.0);
+			int joyXIncrement = 210;
+
+			SDL_Color initColorA = {0, 160, 255, 255};
+			SDL_Color initColorB;
+			double tempdivisor = 4;
+			initColorB.a = 128;
+			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
+			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
+			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
+			jOverlay0 = new joyOverlay(3+0*joyXIncrement, 12, gGameController0, 1.0, initColorA, initColorB);
+			initColorA = {160, 0, 255, 255};
+			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
+			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
+			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
+			jOverlay1 = new joyOverlay(3+1*joyXIncrement, 12, gGameController1, 1.0, initColorA, initColorB);
+			initColorA = {0, 255, 0, 255};
+			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
+			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
+			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
+			jOverlay2 = new joyOverlay(3+2*joyXIncrement, 12, gGameController2, 1.0, initColorA, initColorB);
+			initColorA = {255, 160, 0, 255};
+			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
+			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
+			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
+			jOverlay3 = new joyOverlay(3+3*joyXIncrement, 12, gGameController3, 1.0, initColorA, initColorB);
 
 			//Create gameIcon
 			gameIcon = new devgruGameIcon(SCREEN_WIDTH/2 - 160, 40, 1.0);
@@ -203,8 +268,8 @@ int main( int argc, char* args[] )
             STimer* capTimer = new STimer();
 
 			//beandude
-			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 7.0, true);
-			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 4.0, false);
+			beandude* bDude = new beandude( SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, 7.0, true, gGameController0);
+			beandude* otherDude = new beandude( SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 + 100, 44.0, true, gGameController1);
 
 			// start frames timer
             fpsTimer->start();
@@ -224,16 +289,25 @@ int main( int argc, char* args[] )
 				while( SDL_PollEvent( &e ) != 0 )
 				{
 					//Update jOverlay
-					jOverlay->getState();
+					jOverlay0->updateControllerState();
+					jOverlay1->updateControllerState();
+					jOverlay2->updateControllerState();
+					jOverlay3->updateControllerState();
 
 					//Update beandude
-					bDude->handleEvent(e);
-					otherDude->handleEvent(e);
+					// bDude->handleEvent(e);
+					// otherDude->handleEvent(e);
 
 					//User requests quit
 					if( e.type == SDL_QUIT )
 					{
 						quit = true;
+					}
+					else if( e.type == SDL_KEYDOWN ){
+						if(e.key.keysym.sym == SDLK_q
+						   || e.key.keysym.sym == SDLK_ESCAPE){
+							quit = true;
+						}
 					}
 					else if( e.type == SDL_JOYAXISMOTION )
 					{
@@ -262,10 +336,10 @@ int main( int argc, char* args[] )
 					// 			  << "  joystick: " << e.jbutton.which
 					// 			  << "  button: " << (int)e.jbutton.button
 					// 			  << "  state: " << (int)e.jbutton.state << std::endl;
-						if( (int)e.jbutton.button == 4 || (int)e.jbutton.button == 5){
-							bDude->setActive(!bDude->getActive());
-							otherDude->setActive(!bDude->getActive());
-						}
+						// if( (int)e.jbutton.button == 4 || (int)e.jbutton.button == 5){
+						// 	bDude->setActive(!bDude->getActive());
+						// 	otherDude->setActive(!otherDude->getActive());
+						// }
 					}
 				}
 				
@@ -299,7 +373,10 @@ int main( int argc, char* args[] )
 				otherDude->render();
 
 				//Draw overlay
-				jOverlay->render();
+				jOverlay0->render();
+				jOverlay1->render();
+				jOverlay2->render();
+				jOverlay3->render();
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
