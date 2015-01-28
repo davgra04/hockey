@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 
 // pre-declare classes
 class STexture;
@@ -21,8 +22,10 @@ class devgruGameIcon;
 //Screen dimension constants
 // const int SCREEN_WIDTH = 854;
 // const int SCREEN_HEIGHT = 480;
-const int SCREEN_WIDTH = 1708;
-const int SCREEN_HEIGHT = 960;
+// const int SCREEN_WIDTH = 1708;
+// const int SCREEN_HEIGHT = 960;
+const int SCREEN_WIDTH = 1366;
+const int SCREEN_HEIGHT = 768;
 
 //Analog joystick dead zone
 const int JOYSTICK_DEAD_ZONE = 6000;

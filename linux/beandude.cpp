@@ -26,7 +26,10 @@ beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 	animFrame = 0;
 	spriteSheet = new STexture();
 	// spriteSheet->loadFromFile("assets/beandude/beandude_sprite.png");
-	debugInfo = new STexture();
+	// debugInfo = new STexture();
+	for(int i=0; i<DEBUG_LINE_COUNT; ++i){
+		debugInfo[i] = new STexture();
+	}
 
 	clip = new SDL_Rect();
 
@@ -54,6 +57,10 @@ beandude::beandude(int x, int y, double scl, bool actv, SDL_Joystick* ctrlr){
 beandude::~beandude(){
 
 	spriteSheet->free();
+
+	for(int i=0; i<DEBUG_LINE_COUNT; ++i){
+		debugInfo[i]->free();
+	}
 
 }
 
@@ -389,23 +396,24 @@ void beandude::render(){
 		spriteSheet->render(posX, posY, clip, 0.0, scale, NULL, SDL_FLIP_HORIZONTAL);
 	}
 	
-	// Render debug info
-	debugText.str("");
-	debugText << "(" << (int)posX << "," << (int)posY << ") animState:" << curAnimState;
-	debugInfo->loadFromRenderedText(debugText.str().c_str(), textColor);
-	debugInfo->render(posX + BEANDUDE_WIDTH*scale, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
-
-	// Render collision box
+	// Set collision box bounds
 	collision.x = posX + 2*scale;
-	collision.y = posY + 7*scale;
+	collision.y = posY + 6*scale;
 	collision.w = 6 * scale;
-	collision.h = 3 * scale;
+	collision.h = 4 * scale;
 
-	for(int i=0; i<1; ++i){
-		rectangleRGBA(gRenderer, 
-					  collision.x + i, collision.y + i,
-					  collision.x + collision.w - i, collision.y + collision.h - i, 
-					  colorBounds.r, colorBounds.g, colorBounds.b, colorBounds.a);
+	// Render debug info
+	if(showDebugInfo){
+		renderDebugInfo();
+
+		// Render collision box
+
+		for(int i=0; i<1; ++i){
+			rectangleRGBA(gRenderer, 
+						  collision.x + i, collision.y + i,
+						  collision.x + collision.w - i, collision.y + collision.h - i, 
+						  colorBounds.r, colorBounds.g, colorBounds.b, colorBounds.a);
+		}
 	}
 
 
@@ -442,3 +450,36 @@ void beandude::setBeandudeColor(beandude::beandudeColor col){
 
 
 }
+
+//Renders debug text about beandude
+void beandude::renderDebugInfo(){
+	debugText.precision(2);
+	debugText.str("");
+	debugText << std::fixed << "velX: " << velX;
+
+	debugInfo[4]->loadFromRenderedText(debugText.str().c_str(), textColor);
+	debugInfo[4]->render(posX + BEANDUDE_WIDTH*scale, posY - 10 - 4*(debugInfo[0]->getHeight()+1), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+	debugText.str("");
+	debugText << "velY: " << velY;
+	debugInfo[3]->loadFromRenderedText(debugText.str().c_str(), textColor);
+	debugInfo[3]->render(posX + BEANDUDE_WIDTH*scale, posY - 10 - 3*(debugInfo[0]->getHeight()+1), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+	debugText.str("");
+	debugText << "posX: " << (int)posX;
+	debugInfo[2]->loadFromRenderedText(debugText.str().c_str(), textColor);
+	debugInfo[2]->render(posX + BEANDUDE_WIDTH*scale, posY - 10 - 2*(debugInfo[0]->getHeight()+1), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+	debugText.str("");
+	debugText << "posY: " << (int)posY;
+	debugInfo[1]->loadFromRenderedText(debugText.str().c_str(), textColor);
+	debugInfo[1]->render(posX + BEANDUDE_WIDTH*scale, posY - 10 - 1*(debugInfo[0]->getHeight()+1), NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+	debugText.str("");
+	debugText << "animState:" << curAnimState;
+	debugInfo[0]->loadFromRenderedText(debugText.str().c_str(), textColor);
+	debugInfo[0]->render(posX + BEANDUDE_WIDTH*scale, posY - 10, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+
+}
+
+//Sets whether debug info should be displayed or not
+void beandude::setDebugInfoVisible(bool visible){
+	showDebugInfo = visible;
+}
+

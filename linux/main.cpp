@@ -38,6 +38,9 @@ int frame = 0;
 // vector of all collision boxes in scene
 std::vector<SDL_Rect*> allCollisionBoxes;
 
+// flag for determining whether to render debug info or not
+bool showDebugInfo = true;
+
 // Function for determining collision
 bool isCollision( SDL_Rect* a, SDL_Rect* b){
 
@@ -119,6 +122,7 @@ bool init()
 
 		//Create window
 		gWindow = SDL_CreateWindow( "Hockey", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		// gWindow = SDL_CreateWindow( "Hockey", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -235,31 +239,35 @@ int main( int argc, char* args[] )
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
-			jOverlay0 = new joyOverlay(3+0*joyXIncrement, 12, gGameController0, 1.0, initColorA, initColorB);
+			jOverlay0 = new joyOverlay(3+0*joyXIncrement, 30, gGameController0, 1.0, initColorA, initColorB);
 			initColorA = {109, 255, 1, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
-			jOverlay1 = new joyOverlay(3+1*joyXIncrement, 12, gGameController1, 1.0, initColorA, initColorB);
+			jOverlay1 = new joyOverlay(3+1*joyXIncrement, 30, gGameController1, 1.0, initColorA, initColorB);
 			initColorA = {255, 31, 1, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
-			jOverlay2 = new joyOverlay(3+2*joyXIncrement, 12, gGameController2, 1.0, initColorA, initColorB);
+			jOverlay2 = new joyOverlay(3+2*joyXIncrement, 30, gGameController2, 1.0, initColorA, initColorB);
 			initColorA = {103, 1, 255, 255};
 			initColorB.r = 255 - (255 - initColorA.r)/tempdivisor;
 			initColorB.g = 255 - (255 - initColorA.g)/tempdivisor;
 			initColorB.b = 255 - (255 - initColorA.b)/tempdivisor;
-			jOverlay3 = new joyOverlay(3+3*joyXIncrement, 12, gGameController3, 1.0, initColorA, initColorB);
+			jOverlay3 = new joyOverlay(3+3*joyXIncrement, 30, gGameController3, 1.0, initColorA, initColorB);
 
 			//Create gameIcon
-			gameIcon = new devgruGameIcon(SCREEN_WIDTH/2 - 160, 40, 1.0);
+			gameIcon = new devgruGameIcon(SCREEN_WIDTH*2/3 - 160, 40, 1.0);
 			// gameIcon = new devgruGameIcon(240, 219, 1.0);
 
 			//frame display
 			SDL_Color textColor = { 0, 80, 255, 255 };
 			STexture* frameTex = new STexture();
+			STexture* fpsTex = new STexture();
 			std::stringstream frameString;
+
+			//Average FPS count
+			float avgFPS = 0;
 			
 			//The frames per second timer
             STimer* fpsTimer = new STimer();
@@ -312,6 +320,13 @@ int main( int argc, char* args[] )
 						if(e.key.keysym.sym == SDLK_q
 						   || e.key.keysym.sym == SDLK_ESCAPE){
 							quit = true;
+						}
+						else if(e.key.keysym.sym == SDLK_d){
+							showDebugInfo = !showDebugInfo;
+							bDude0->setDebugInfoVisible(showDebugInfo);
+							bDude1->setDebugInfoVisible(showDebugInfo);
+							bDude2->setDebugInfoVisible(showDebugInfo);
+							bDude3->setDebugInfoVisible(showDebugInfo);
 						}
 					}
 					else if( e.type == SDL_JOYAXISMOTION )
@@ -366,10 +381,17 @@ int main( int argc, char* args[] )
 				gameIcon->render(frame, (int)(frame)%360, 0.0, 1.0);
 
 				//Draw frames
-				frameString.str("");
-				frameString << frame;
-				frameTex->loadFromRenderedText(frameString.str().c_str(), textColor);
-				frameTex->render(0, 0, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+				if(showDebugInfo){
+					frameString.str("");
+					frameString << frame;
+					frameTex->loadFromRenderedText(frameString.str().c_str(), textColor);
+					frameTex->render(0, 0, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+
+					frameString.str("");
+					frameString << std::setprecision(1) << std::fixed <<  "Average FPS: " << avgFPS;
+					fpsTex->loadFromRenderedText(frameString.str().c_str(), textColor);
+					fpsTex->render(0, frameTex->getHeight() + 1, NULL, 0.0, 1.0, NULL, SDL_FLIP_NONE);
+				}
 
 				//Draw beandude
 				bDude0->move();
@@ -382,10 +404,12 @@ int main( int argc, char* args[] )
 				bDude3->render();
 
 				//Draw overlay
-				jOverlay0->render();
-				jOverlay1->render();
-				jOverlay2->render();
-				jOverlay3->render();
+				if(showDebugInfo){
+					jOverlay0->render();
+					jOverlay1->render();
+					jOverlay2->render();
+					jOverlay3->render();
+				}
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );

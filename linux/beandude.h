@@ -14,10 +14,13 @@ private:
 		ANIM_JUMP
 	};
 
+	//number of lines in debug display
+	static const int DEBUG_LINE_COUNT = 5;
 
 	STexture* spriteSheet;
-	STexture* debugInfo;
+	STexture* debugInfo[DEBUG_LINE_COUNT];
 	std::stringstream debugText;
+	bool showDebugInfo = false;
 	SDL_Rect* clip;
 	int animFrame;
 
@@ -27,6 +30,14 @@ private:
 	static const int ANIM_IDLEFRAMES = 2;
 	int anim_walkCycle[ANIM_WALKFRAMES];
 	int anim_idleCycle[ANIM_IDLEFRAMES];
+
+	//dimensions of beandude
+	static const int BEANDUDE_WIDTH = 10;
+	static const int BEANDUDE_HEIGHT = 10;
+
+
+	//max velocity of beandude
+	static const double BEANDUDE_VELOCITY = 3.0;
 
 	// Display Position
 	double posX, posY;
@@ -60,12 +71,6 @@ public:
 		PURPLE
 	};
 
-	//dimensions of beandude
-	static const int BEANDUDE_WIDTH = 10;
-	static const int BEANDUDE_HEIGHT = 10;
-
-	//max velocity of beandude
-	static const double BEANDUDE_VELOCITY = 3.0;
 
 	beandude(int x=0, int y=0, double scl=0.0, bool actv=false, SDL_Joystick* ctrlr=NULL);
 	~beandude();
@@ -91,6 +96,12 @@ public:
 
 	//Loads different colored sprite into beandude object
 	void setBeandudeColor(beandudeColor col);
+
+	//Renders debug text about beandude
+	void renderDebugInfo();
+
+	//Sets whether debug info should be displayed or not
+	void setDebugInfoVisible(bool visible);
 
 };
 
