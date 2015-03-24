@@ -5,5 +5,5 @@ This codebase is the result of following [Lazy Foo's excellent guide](http://laz
 
 ![hockey screenshot 3](https://raw.githubusercontent.com/davgra04/hockey/addingcollision/screenshot3.png)
 
-It currently supports 4 players with basic collision with each other and icy/slippery physics. A frame counter and controller input information is overlayed at the top.
+It currently supports 4 players with basic collision with each other and icy/slippery physics. A frame counter and controller input information are overlayed at the top.
 
